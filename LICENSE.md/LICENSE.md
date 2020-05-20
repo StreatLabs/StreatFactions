@@ -2,6 +2,7 @@
 
 Copyright © 2020 StreatLabs 
 
+“The software,” in this case, is anything that comes with the sk provided by StreatLabs, and it includes but is not limited to, this license, the .sk or .jar files etc.
 
 Licensed under the "StreatLabs Standard License" License v1.0 (Based on MIT License)
 
