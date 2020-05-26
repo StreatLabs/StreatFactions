@@ -1,0 +1,623 @@
+options:
+    prefix : &6Streat&cFactions&r
+    version : 1.0.0
+
+on chat:
+    if {factions::faction.%player's uuid%} is not set:
+        set the chat format to "%player%: %message%"
+    else:
+        set the chat format to "&3[&9%{factions::faction.%player's uuid%}%&3] &b->&r %player%: %message%"
+
+
+command /factions [<text>] [<text>] [<text>]:
+    aliases: /f
+    trigger:
+ 
+#-#-#-#-#-#-#-#-#-#-#-#-#-#HELP MESSAGE#-#-#-#-#-#-#-#-#-#-#-#
+
+        if arg 1 is not set:
+            if arg 2 is not set:
+                send ""
+                send ""
+                send "&c                  {@prefix}"
+                send "&e&l                    Help&r"
+                send ""
+                send "&7-----------------------------------------------------"
+                send "&b/f create &f<name>&8 - &7Create your own faction."
+                send "&b/f join &f<name>&8 - &7Join faction."
+                send "&b/f leave&8 - &7Leave faction."
+                send "&b/f sethome&8 - &7 Set your factions home."
+                send "&b/f home&8 - &7Go to your factions home."
+                send "&b/f setwarp &f<name>&8 - &7Create a faction warp."
+                send "&b/f warp &f<name>&8 - &7Warp to location."
+                send "&b/f promote &7<name>&8 - &7Promote people in your faction."
+                send "&b/f demote &f<name> &8 - &7Demote people in your faction."
+                send "&b/f kick &f<name>&8 - &7Kick a member of your faction."
+                send "&b/f ban &f<name>&8 - &7Ban a member of your faction."
+                send "&b/f unban &f<name>&8 - &7Unban a member from your faction."
+                send "&b/f claim&8 - &7 Claim land for your faction."
+                send "&b/f unclaim&8 - &7Unclaim land for your faction."
+                send "&7-----------------------------------------------------"
+        if arg 1 is "help":
+            send ""
+            send ""
+            send "&c                  {@prefix}"
+            send "&e&l                    Help&r"
+            send ""
+            send "&7-----------------------------------------------------"
+            send "&b/f create &f<name>&8 - &7Create your own faction."
+            send "&b/f join &f<name>&8 - &7Join faction."
+            send "&b/f leave&8 - &7Leave faction."
+            send "&b/f sethome&8 - &7 Set your factions home."
+            send "&b/f home&8 - &7Go to your factions home."
+            send "&b/f setwarp &f<name>&8 - &7Create a faction warp."
+            send "&b/f warp &f<name>&8 - &7Warp to location."
+            send "&b/f promote &7<name>&8 - &7Promote people in your faction."
+            send "&b/f demote &f<name> &8 - &7Demote people in your faction."
+            send "&b/f kick &f<name>&8 - &7Kick a member of your faction."
+            send "&b/f ban &f<name>&8 - &7Ban a member of your faction."
+            send "&b/f unban &f<name>&8 - &7Unban a member from your faction."
+            send "&b/f claim&8 - &7 Claim land for your faction."
+            send "&b/f unclaim&8 - &7Unclaim land for your faction."
+            send "&7-----------------------------------------------------"
+
+#-#-#-#-#-#-#-#-#-#-#-#-#-#CREATE FACTION#-#-#-#-#-#-#-#-#-#-#-#
+
+        if player has permission "factions.create":
+            if arg 1 is "create":
+                if arg 2 is set:
+                    if arg 3 is not set:
+                        if {factions::%arg 2%} is not set:
+                            if {factions::faction.%player's uuid%} is not set:
+                                set {factions::%arg 2%} to arg 2
+                                set {factions::owner.%player%} to player
+                                set {factions::owner.%player's uuid%} to {factions::owner.%player%}
+                                set {factions::faction.%player's uuid%} to arg 2
+                                set {factions::%{factions::%arg 2%}%.members} to 1
+                                set {factions::%{factions::faction.%player's uuid%}%.%player's uuid%.rank} to "leader"
+                                set {factions::%{factions::faction.%player's uuid%}%.maxclaims} to 15
+                                set {factions::%{factions::faction.%player's uuid%}%.claims} to 0
+                                send "&aCreating Faction &2%arg 2%"
+                            else:
+                                send "&cYou are already in a faction"
+                        else:
+                            send "&cThat faction name is taken!"
+                    else:
+                        send "&cThere can't be spaces in your faction name"
+                else:
+                    send "{@prefix} &fUsage: &4/f create <name>&r"
+        else:
+            send "&cYou are lacking the permission node: &4factions.create"
+
+#-#-#-#-#-#-#-#-#-#-#-#-#-#JOIN FACTION#-#-#-#-#-#-#-#-#-#-#-#
+
+        if player has permission "factions.join":
+            if arg 1 is "join":
+                if arg 2 is set:
+                    if {factions::%arg 2%} is set:
+                        if {factions::faction.%player's uuid%} is not set:
+                            if {factions::%{factions::faction.%arg 2%}%.%player%.banned} is set:
+                                send "&cYou are banned from this faction"
+                            else:
+                                set {factions::owner.%player's uuid%} to {factions::owner.%player%}
+                                set {factions::faction.%player's uuid%} to arg 2
+                                add 1 to {factions::%{factions::%arg 2%}%.members}
+                                set {factions::%{factions::faction.%player's uuid%}%.%player's uuid%.rank} to "recruit"
+                        else:
+                            send "&cYou are already in a faction"
+                    else:
+                        send "&cThat faction doesn't exist"
+                else:
+                    send "{@prefix} &fUsage: &4/f join <name>&r"
+        else:
+            send "&cYou are lacking the permission node: &4factions.join"
+
+#-#-#-#-#-#-#-#-#-#-#-#-#-#LEAVE FACTION#-#-#-#-#-#-#-#-#-#-#-#
+
+        if player has permission "factions.leave":
+            if arg 1 is "leave":
+                if arg 2 is not set:
+                    if {factions::faction.%player's uuid%} is set:
+                        if {factions::%{factions::faction.%player's uuid%}%.members} = 1:
+                            delete {factions::%{factions::faction.%player's uuid%}%.members}
+                            delete {factions::%{factions::faction.%player's uuid%}%}
+                            delete {factions::owner.%player's uuid%}
+                            delete {factions::owner.%{factions::owner.%player's uuid%}%}
+                            broadcast "&7%{factions::faction.%player's uuid%}% has been disbanded"
+                            delete {factions::faction.%player's uuid%}
+                            delete {factions::%{factions::faction.%player's uuid%}%.maxclaims}
+                            delete {factions::%{factions::faction.%player's uuid%}%.claims}
+                            delete {factions::%{factions::faction.%player's uuid%}%.%player's uuid%.rank}
+                        else:
+                            subtract 1 from {factions::%{factions::faction.%player's uuid%}%.members}
+                            delete {factions::owner.%player's uuid%}
+                            send "&aLeaving &2%{factions::faction.%player's uuid%}%"
+                            delete {factions::faction.%player's uuid%}
+                    else:
+                        send "&cYou are not in a faction" 
+#-#-#-#-#-#-#-#-#-#-#-#-#-#DELETE FACTION#-#-#-#-#-#-#-#-#-#-#-#
+
+        if player has permission "factions.admin.delete":
+            if arg 1 is "delete":
+                if arg 2 is set:
+                    if arg 3 is not set:
+                        if {factions::%arg 2%} is set:
+                            send "&4Faction %{factions::%arg 2%}% &4has been removed"
+                            delete {factions::faction.%player's uuid%}
+                            delete {factions::%arg 2%}
+                            delete {factions::%{factions::faction.%player's uuid%}%.members}
+                            delete {factions::%{factions::faction.%player's uuid%}%.maxclaims}
+                            delete {factions::%{factions::faction.%player's uuid%}%.claims}
+                            delete {factions::%{factions::faction.%player's uuid%}%.%player's uuid%.rank}
+                        else:
+                            send "&cThat faction doesn't exist!"
+                    else:
+                        send "&4ERROR: TOO MANY ARGUMENTS"
+                else:
+                    send "{@prefix} &fUsage: &4/f delete <name>&r"
+        else:
+            send "&cYou are lacking the permission node: &4factions.admin.delete"
+
+#-#-#-#-#-#-#-#-#-#-#-#-#-#HOMES FACTION#-#-#-#-#-#-#-#-#-#-#-#
+
+        if player has permission "factions.sethome":
+            if arg 1 is "sethome":
+                if {factions::faction.%player's uuid%} is set:
+                    if {factions::%{factions::faction.%player's uuid%}%.%player's uuid%.rank} is "leader" or "co-leader":
+                        set {factions::home.%{factions::faction.%player's uuid%}%} to location of player
+                        send "&aYour faction home has been set to &c%x-coordinate of player% &c%y-coordinate of player% &c%z-coordinate of player%"
+                    else:
+                        send "&cYou must be a leader or co-leader to do that"
+                else:
+                    send "&cYou must be in a faction to do that"
+        else:
+            send "&cYou are lacking the permission node: &4factions.sethome"
+
+
+        if player has permission "factions.home":
+            if arg 1 is "home":
+                if {factions::faction.%player's uuid%} is set:
+                    if {factions::%{factions::faction.%player's uuid%}%.%player's uuid%.rank} is "leader" or "co-leader" or "moderator" or "member":
+                        teleport player to {factions::home.%{factions::faction.%player's uuid%}%}
+                        send "&aSending you to factins home"
+                    else:
+                        send "&cRecruits can't do that, you must ask a leader, co-leader or moderator to promote you first"
+                else:
+                    send "&cYou must be in a faction to do that"
+        else:
+            send "&cYou are lacking the permission node: &4factions.home"
+
+#-#-#-#-#-#-#-#-#-#-#-#-#-#WARPS FACTION#-#-#-#-#-#-#-#-#-#-#-#
+
+        if player has permission "factions.setwarp":
+            if arg 1 is "setwarp":
+                if arg 2 is set:
+                    if {factions::faction.%player's uuid%} is set:
+                        if {factions::%{factions::faction.%player's uuid%}%.%player's uuid%.rank} is "leader" or "co-leader" or "moderator":
+                            if {factions::%{factions::faction.%player's uuid%}%.warp1} is not set:
+                                set {factions::%{factions::faction.%player's uuid%}%.warp1} to arg 2
+                                set {factions::%{factions::faction.%player's uuid%}%.warp1l} to location of player
+                                send "&aCreating Warp: &2%{factions::%{factions::faction.%player's uuid%}%.warp1}%"
+                            else:
+                                if {factions::%{factions::faction.%player's uuid%}%.warp2} is not set:
+                                    set {factions::%{factions::faction.%player's uuid%}%.warp2} to arg 2
+                                    set {factions::%{factions::faction.%player's uuid%}%.warp2l} to location of player
+                                    send "&aCreating Warp: &2%{factions::%{factions::faction.%player's uuid%}%.warp1}%"
+                                else:
+                                    if {factions::%{factions::faction.%player's uuid%}%.warp3} is not set:
+                                        set {factions::%{factions::faction.%player's uuid%}%.warp3} to arg 2
+                                        set {factions::%{factions::faction.%player's uuid%}%.warp3l} to location of player
+                                        send "&aCreating Warp: &2%{factions::%{factions::faction.%player's uuid%}%.warp1}%"
+                                    else:
+                                        if {factions::%{factions::faction.%player's uuid%}%.warp4} is not set:
+                                            set {factions::%{factions::faction.%player's uuid%}%.warp4} to arg 2
+                                            set {factions::%{factions::faction.%player's uuid%}%.warp4l} to location of player
+                                            send "&aCreating Warp: &2%{factions::%{factions::faction.%player's uuid%}%.warp1}%"
+                                        else:
+                                            if {factions::%{factions::faction.%player's uuid%}%.warp5} is not set:
+                                                set {factions::%{factions::faction.%player's uuid%}%.warp5} to arg 2
+                                                set {factions::%{factions::faction.%player's uuid%}%.warp5l} to location of player
+                                                send "&aCreating Warp: &2%{factions::%{factions::faction.%player's uuid%}%.warp1}%"
+                                            else:
+                                                if {factions::%{factions::faction.%player's uuid%}%.warp6} is not set:
+                                                    set {factions::%{factions::faction.%player's uuid%}%.warp6} to arg 2
+                                                    set {factions::%{factions::faction.%player's uuid%}%.warp6l} to location of player
+                                                    send "&aCreating Warp: &2%{factions::%{factions::faction.%player's uuid%}%.warp1}%"
+                                                else:
+                                                    if {factions::%{factions::faction.%player's uuid%}%.warp7} is not set:
+                                                        set {factions::%{factions::faction.%player's uuid%}%.warp7} to arg 2
+                                                        set {factions::%{factions::faction.%player's uuid%}%.warp7l} to location of player
+                                                        send "&aCreating Warp: &2%{factions::%{factions::faction.%player's uuid%}%.warp1}%"
+                                                    else:
+                                                        if {factions::%{factions::faction.%player's uuid%}%.warp8} is not set:
+                                                            set {factions::%{factions::faction.%player's uuid%}%.warp8} to arg 2
+                                                            set {factions::%{factions::faction.%player's uuid%}%.warp8l} to location of player
+                                                            send "&aCreating Warp: &2%{factions::%{factions::faction.%player's uuid%}%.warp1}%"
+                                                        else:
+                                                            if {factions::%{factions::faction.%player's uuid%}%.warp9} is not set:
+                                                                set {factions::%{factions::faction.%player's uuid%}%.warp9} to arg 2
+                                                                set {factions::%{factions::faction.%player's uuid%}%.warp9l} to location of player
+                                                                send "&aCreating Warp: &2%{factions::%{factions::faction.%player's uuid%}%.warp1}%"
+                                                            else:
+                                                                send "&cYou have reached the max amount of warps"
+
+        if player has permission "factions.warp":
+            if arg 1 is "warp":
+                if arg 2 is not set:
+                    if {factions::faction.%player's uuid%} is set:
+                        if {factions::%{factions::faction.%player's uuid%}%.%player's uuid%.rank} is "leader" or "co-leader" or "moderator" or "member":
+                            if {factions::%{factions::faction.%player's uuid%}%.warp1} is not set:
+                                open chest with 1 row named "%{factions::faction.%player's uuid%}%'s Warps" to player
+                            else: 
+                                open chest with 1 row named "%{factions::faction.%player's uuid%}%'s Warps" to player
+                                wait 2 ticks
+                                format slot 0 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp1}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp1}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp1}%"]
+
+
+                            if {factions::%{factions::faction.%player's uuid%}%.warp2} is set:
+                                open chest with 1 row named "%{factions::faction.%player's uuid%}%'s Warps" to player
+                                wait 2 ticks
+                                format slot 0 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp1}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp1}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp1}%"]
+                                format slot 1 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp2}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp2}%" and " " and "&elick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp2}%"]
+
+
+                            if {factions::%{factions::faction.%player's uuid%}%.warp3} is set:
+                                open chest with 1 row named "%{factions::faction.%player's uuid%}%'s Warps" to player
+                                wait 2 ticks
+                                format slot 0 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp1}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp1}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp1}%"]
+                                format slot 1 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp2}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp2}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp2}%"]
+                                format slot 2 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp3}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp3}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp3}%"]
+
+
+                            if {factions::%{factions::faction.%player's uuid%}%.warp4} is set:
+                                open chest with 1 row named "%{factions::faction.%player's uuid%}%'s Warps" to player
+                                wait 2 ticks
+                                format slot 0 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp1}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp1}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp1}%"]
+                                format slot 1 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp2}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp2}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp2}%"]
+                                format slot 2 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp3}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp3}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp3}%"]
+                                format slot 3 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp4}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp4}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp4}%"]
+
+
+                            if {factions::%{factions::faction.%player's uuid%}%.warp5} is set:
+                                open chest with 1 row named "%{factions::faction.%player's uuid%}%'s Warps" to player
+                                wait 2 ticks
+                                format slot 0 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp1}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp1}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp1}%"]
+                                format slot 1 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp2}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp2}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp2}%"]
+                                format slot 2 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp3}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp3}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp3}%"]
+                                format slot 3 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp4}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp4}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp4}%"]
+                                format slot 4 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp5}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp5}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp5}%"]
+
+
+                            if {factions::%{factions::faction.%player's uuid%}%.warp6} is set:
+                                open chest with 1 row named "%{factions::faction.%player's uuid%}%'s Warps" to player
+                                wait 2 ticks
+                                format slot 0 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp1}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp1}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp1}%"]
+                                format slot 1 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp2}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp2}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp2}%"]
+                                format slot 2 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp3}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp3}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp3}%"]
+                                format slot 3 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp4}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp4}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp4}%"]
+                                format slot 4 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp5}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp5}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp5}%"]
+                                format slot 5 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp6}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp6}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp6}%"]
+
+
+                            if {factions::%{factions::faction.%player's uuid%}%.warp7} is set:
+                                open chest with 1 row named "%{factions::faction.%player's uuid%}%'s Warps" to player
+                                wait 2 ticks
+                                format slot 0 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp1}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp1}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp1}%"]
+                                format slot 1 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp2}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp2}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp2}%"]
+                                format slot 2 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp3}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp3}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp3}%"]
+                                format slot 3 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp4}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp4}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp4}%"]
+                                format slot 4 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp5}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp5}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp5}%"]
+                                format slot 5 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp6}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp6}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp6}%"]
+                                format slot 6 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp7}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp7}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp7}%"]
+
+
+                            if {factions::%{factions::faction.%player's uuid%}%.warp8} is set:
+                                open chest with 1 row named "%{factions::faction.%player's uuid%}%'s Warps" to player
+                                wait 2 ticks
+                                format slot 0 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp1}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp1}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp1}%"]
+                                format slot 1 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp2}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp2}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp2}%"]
+                                format slot 2 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp3}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp3}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp3}%"]
+                                format slot 3 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp4}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp4}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp4}%"]
+                                format slot 4 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp5}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp5}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp5}%"]
+                                format slot 5 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp6}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp6}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp6}%"]
+                                format slot 6 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp7}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp7}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp7}%"]
+                                format slot 7 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp8}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp8}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp8}%"]
+
+
+                            if {factions::%{factions::faction.%player's uuid%}%.warp9} is set:
+                                open chest with 1 row named "%{factions::faction.%player's uuid%}%'s Warps" to player
+                                wait 2 ticks
+                                format slot 0 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp1}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp1}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp1}%"]
+                                format slot 1 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp2}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp2}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp2}%"]
+                                format slot 2 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp3}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp3}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp3}%"]
+                                format slot 3 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp4}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp4}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp4}%"]
+                                format slot 4 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp5}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp5}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp5}%"]
+                                format slot 5 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp6}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp6}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp6}%"]
+                                format slot 6 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp7}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp7}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp7}%"]
+                                format slot 7 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp8}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp8}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp8}%"]
+                                format slot 8 of player with ender eye named "&a%{factions::%{factions::faction.%player's uuid%}%.warp9}%" with lore "&dWarp to %{factions::%{factions::faction.%player's uuid%}%.warp9}%" and " " and "&eClick to teleport!" to close then run [make player execute command "/f warp %{factions::%{factions::faction.%player's uuid%}%.warp9}%"]
+
+
+                if arg 2 is "%{factions::%{factions::faction.%player's uuid%}%.warp1}%" or "%{factions::%{factions::faction.%player's uuid%}%.warp2}%" or "%{factions::%{factions::faction.%player's uuid%}%.warp3}%" or "%{factions::%{factions::faction.%player's uuid%}%.warp4}%" or "%{factions::%{factions::faction.%player's uuid%}%.warp5}%" or "%{factions::%{factions::faction.%player's uuid%}%.warp6}%" or "%{factions::%{factions::faction.%player's uuid%}%.warp7}%" or "%{factions::%{factions::faction.%player's uuid%}%.warp8}%" or "%{factions::%{factions::faction.%player's uuid%}%.warp9}%":
+
+                    if {factions::faction.%player's uuid%} is set:
+                        if {factions::%{factions::faction.%player's uuid%}%.%player's uuid%.rank} is "leader" or "co-leader" or "moderator" or "member":
+                            if arg 2 is "%{factions::%{factions::faction.%player's uuid%}%.warp1}%":
+                                teleport player to {factions::%{factions::faction.%player's uuid%}%.warp1l}
+                                send "&aWarping you to &2%{factions::%{factions::faction.%player's uuid%}%.warp1}%"
+                            if arg 2 is "%{factions::%{factions::faction.%player's uuid%}%.warp2}%":
+                                teleport player to {factions::%{factions::faction.%player's uuid%}%.warp2l}
+                                send "&aWarping you to &2%{factions::%{factions::faction.%player's uuid%}%.warp2}%"
+                            if arg 1 is "%{factions::%{factions::faction.%player's uuid%}%.warp3}%":
+                                teleport player to {factions::%{factions::faction.%player's uuid%}%.warp3l}
+                                send "&aWarping you to &2%{factions::%{factions::faction.%player's uuid%}%.warp3}%"
+                            if arg 2 is "%{factions::%{factions::faction.%player's uuid%}%.warp4}%":
+                                teleport player to {factions::%{factions::faction.%player's uuid%}%.warp4l}
+                                send "&aWarping you to &2%{factions::%{factions::faction.%player's uuid%}%.warp4}%"
+                            if arg 2 is "%{factions::%{factions::faction.%player's uuid%}%.warp5}%":
+                                teleport player to {factions::%{factions::faction.%player's uuid%}%.warp5l}
+                                send "&aWarping you to &2%{factions::%{factions::faction.%player's uuid%}%.warp5}%"
+                            if arg 2 is "%{factions::%{factions::faction.%player's uuid%}%.warp6}%":
+                                teleport player to {factions::%{factions::faction.%player's uuid%}%.warp6l}
+                                send "&aWarping you to &2%{factions::%{factions::faction.%player's uuid%}%.warp6}%"
+                            if arg 2 is "%{factions::%{factions::faction.%player's uuid%}%.warp7}%":
+                                teleport player to {factions::%{factions::faction.%player's uuid%}%.warp7l}
+                                send "&aWarping you to &2%{factions::%{factions::faction.%player's uuid%}%.warp7}%"
+                            if arg 2 is "%{factions::%{factions::faction.%player's uuid%}%.warp8}%":
+                                teleport player to {factions::%{factions::faction.%player's uuid%}%.warp8l}
+                                send "&aWarping you to &2%{factions::%{factions::faction.%player's uuid%}%.warp8}%"
+                            if arg 2 is "%{factions::%{factions::faction.%player's uuid%}%.warp9}%":
+                                teleport player to {factions::%{factions::faction.%player's uuid%}%.warp9l}
+                                send "&aWarping you to &2%{factions::%{factions::faction.%player's uuid%}%.warp9}%"
+                        else:
+                            send "&cThat warp doesn't exist"
+
+
+        if player has permission "factions.delwarp":
+            if arg 1 is "delwarp":
+                if arg 2 is "%{factions::%{factions::faction.%player's uuid%}%.warp1}%" or "%{factions::%{factions::faction.%player's uuid%}%.warp2}%" or "%{factions::%{factions::faction.%player's uuid%}%.warp3}%" or "%{factions::%{factions::faction.%player's uuid%}%.warp4}%" or "%{factions::%{factions::faction.%player's uuid%}%.warp5}%" or "%{factions::%{factions::faction.%player's uuid%}%.warp6}%" or "%{factions::%{factions::faction.%player's uuid%}%.warp7}%" or "%{factions::%{factions::faction.%player's uuid%}%.warp8}%" or "%{factions::%{factions::faction.%player's uuid%}%.warp9}%":
+                    if arg 2 is "%{factions::%{factions::faction.%player's uuid%}%.warp1}%":
+                        send "&aDeleting Warp &2%{factions::%{factions::faction.%player's uuid%}%.warp1}%"
+                        delete {factions::%{factions::faction.%player's uuid%}%.warp1}
+                    if arg 2 is "%{factions::%{factions::faction.%player's uuid%}%.warp2}%":
+                        send "&aDeleting Warp &2%{factions::%{factions::faction.%player's uuid%}%.warp2}%"
+                        delete {factions::%{factions::faction.%player's uuid%}%.warp2}
+                    if arg 2 is "%{factions::%{factions::faction.%player's uuid%}%.warp3}%":
+                        send "&aDeleting Warp &2%{factions::%{factions::faction.%player's uuid%}%.warp3}%"
+                        delete {factions::%{factions::faction.%player's uuid%}%.warp3}
+                    if arg 2 is "%{factions::%{factions::faction.%player's uuid%}%.warp4}%":
+                        send "&aDeleting Warp &2%{factions::%{factions::faction.%player's uuid%}%.warp4}%"
+                        delete {factions::%{factions::faction.%player's uuid%}%.warp4}
+                    if arg 2 is "%{factions::%{factions::faction.%player's uuid%}%.warp5}%":
+                        send "&aDeleting Warp &2%{factions::%{factions::faction.%player's uuid%}%.warp5}%"
+                        delete {factions::%{factions::faction.%player's uuid%}%.warp5}
+                    if arg 2 is "%{factions::%{factions::faction.%player's uuid%}%.warp6}%":
+                        send "&aDeleting Warp &2%{factions::%{factions::faction.%player's uuid%}%.warp6}%"
+                        delete {factions::%{factions::faction.%player's uuid%}%.warp6}
+                    if arg 2 is "%{factions::%{factions::faction.%player's uuid%}%.warp7}%":
+                        send "&aDeleting Warp &2%{factions::%{factions::faction.%player's uuid%}%.warp7}%"
+                        delete {factions::%{factions::faction.%player's uuid%}%.warp7}
+                    if arg 2 is "%{factions::%{factions::faction.%player's uuid%}%.warp8}%":
+                        send "&aDeleting Warp &2%{factions::%{factions::faction.%player's uuid%}%.warp8}%"
+                        delete {factions::%{factions::faction.%player's uuid%}%.warp8}
+                    if arg 2 is "%{factions::%{factions::faction.%player's uuid%}%.warp9}%":
+                        send "&aDeleting Warp &2%{factions::%{factions::faction.%player's uuid%}%.warp9}%"
+                        delete {factions::%{factions::faction.%player's uuid%}%.warp9}
+                else:
+                    send "&cThat warp doesn't exist"
+
+#-#-#-#-#-#-#-#-#-#-#-#-#-#PROMOTE PLAYER#-#-#-#-#-#-#-#-#-#-#-#
+
+        if player has permission "factions.promote":
+            if arg 1 is "promote":
+                if arg 2 is set:
+                    if arg 3 is not set:
+                        if {factions::faction.%player's uuid%} is set:
+                            if {factions::%{factions::faction.%player's uuid%}%.%player's uuid%.rank} is "leader" or "co-leader" or "moderator":
+                                if {factions::%{factions::faction.%uuid of arg 2 parsed as offline player%}%.%uuid of arg 2 parsed as offline player%.rank} is "recruit":
+                                    set {factions::%{factions::faction.%uuid of arg 2 parsed as offline player%}%.%uuid of arg 2 parsed as offline player%.rank} to "member"
+                                    send "&aYou have been promoted to &2Member" to arg 2 parsed as offline player
+                                    send "&a%arg 2% has been promoted to &2Member" to player
+                            if {factions::%{factions::faction.%player's uuid%}%.%player's uuid%.rank} is "leader" or "co-leader":
+                                if {factions::%{factions::faction.%uuid of arg 2 parsed as offline player%}%.%uuid of arg 2 parsed as offline player%.rank} is "member":
+                                    set {factions::%{factions::faction.%uuid of arg 2 parsed as offline player%}%.%uuid of arg 2 parsed as offline player%.rank} to "moderator"
+                                    send "&aYou have been promoted to &2Moderator" to arg 2 parsed as offline player
+                                    send "&a%arg 2% has been promoted to &2Moderator" to player
+                                if {factions::%{factions::faction.%uuid of arg 2 parsed as offline player%}%.%uuid of arg 2 parsed as offline player%.rank} is "moderator":
+                                    set {factions::%{factions::faction.%uuid of arg 2 parsed as offline player%}%.%uuid of arg 2 parsed as offline player%.rank} to "co-leader"
+                                    send "&aYou have been promoted to &2Co-Leader" to arg 2 parsed as offline player
+                                    send "&a%arg 2% has been promoted to &2Co-Leader" to player
+                        if {factions::%{factions::faction.%player's uuid%}%.%player's uuid%.rank} is "leader":
+                            if {factions::%{factions::faction.%uuid of arg 2 parsed as offline player%}%.%uuid of arg 2 parsed as offline player%.rank} is "co-leader":
+                                send "&4WARNING DOING THIS WILL MAKE %arg 2% LEADER AND YOU WILL BE DEMOTED TO CO-LEADER"
+                                send "&aTO CONFIRM RUN &2/f promote %arg 2%"
+                        if {factions::%{factions::faction.%player's uuid%}%.%player's uuid%.rank} is "leader":
+                            if {factions::%{factions::faction.%uuid of arg 2 parsed as offline player%}%.%uuid of arg 2 parsed as offline player%.rank} is "leader":
+                                send "&cFaction leaders cannot be promoted"
+                    if arg 3 is "confirm":
+                        if {factions::faction.%player's uuid%} is set:
+                            if {factions::%{factions::faction.%player's uuid%}%.%player's uuid%.rank} is "leader":
+                                if {factions::%{factions::faction.%uuid of arg 2 parsed as offline player%}%.%uuid of arg 2 parsed as offline player%.rank} is "co-leader":
+                                    set {factions::%{factions::faction.%uuid of arg 2 parsed as offline player%}%.%uuid of arg 2 parsed as offline player%.rank} to "leader"
+                                    set {factions::%{factions::faction.%player's uuid%}%.%player's uuid%.rank} to "co-leader"
+                                    send "&aYou have been promoted to &2Leader" to arg 2 parsed as offline player
+                                    send "&a%arg 2% has been promoted to &2Leader" to player
+                                    send "&c%player% has been demoted to &4Co-Leader" to player
+                            else:
+                                send "&cYou can't do that, you must be promoted first"
+                        else:
+                            send "&cYou must be in a faction to do that"
+                else:
+                    send "{@prefix} &fUsage: &4/f promote <player>&r"
+        else:
+            send "&cYou are lacking the permission node: &4factions.promote"
+
+#-#-#-#-#-#-#-#-#-#-#-#-#-#DEMOTE PLAYER#-#-#-#-#-#-#-#-#-#-#-#
+
+        if player has permission "factions.demote":
+            if arg 1 is "demote":
+                if arg 2 is set:
+                    if {factions::faction.%player's uuid%} is set:
+                        if {factions::%{factions::faction.%player's uuid%}%.%player's uuid%.rank} is "leader" or "co-leader" or "moderator":
+                            if {factions::%{factions::faction.%uuid of arg 2 parsed as offline player%}%.%uuid of arg 2 parsed as offline player%.rank} is "recruit":
+                                send "&cYou cannot demote a recruit"
+                            if {factions::%{factions::faction.%uuid of arg 2 parsed as offline player%}%.%uuid of arg 2 parsed as offline player%.rank} is "member":
+                                set {factions::%{factions::faction.%uuid of arg 2 parsed as offline player%}%.%uuid of arg 2 parsed as offline player%.rank} to "recruit"
+                                send "&cYou have been demoted to &4Recruit" to arg 2 parsed as offline player
+                                send "&c%arg 2% has been demoted to &4Recruit" to player
+                        if {factions::%{factions::faction.%player's uuid%}%.%player's uuid%.rank} is "leader" or "co-leader":
+                            if {factions::%{factions::faction.%uuid of arg 2 parsed as offline player%}%.%uuid of arg 2 parsed as offline player%.rank} is "moderator":
+                                set {factions::%{factions::faction.%uuid of arg 2 parsed as offline player%}%.%uuid of arg 2 parsed as offline player%.rank} to "member"
+                                send "&cYou have been demoted to &4Member" to arg 2 parsed as offline player
+                                send "&c%arg 2% has been demoted to &4Member" to player
+                        if {factions::%{factions::faction.%player's uuid%}%.%player's uuid%.rank} is "leader":
+                            if {factions::%{factions::faction.%uuid of arg 2 parsed as offline player%}%.%uuid of arg 2 parsed as offline player%.rank} is "co-leader":
+                                set {factions::%{factions::faction.%uuid of arg 2 parsed as offline player%}%.%uuid of arg 2 parsed as offline player%.rank} to "moderator"
+                                send "&cYou have been demoted to &4Moderator" to arg 2 parsed as offline player
+                                send "&c%arg 2% has been demoted to &4Moderator" to player
+                        if {factions::%{factions::faction.%player's uuid%}%.%player's uuid%.rank} is "leader":
+                            if {factions::%{factions::faction.%uuid of arg 2 parsed as offline player%}%.%uuid of arg 2 parsed as offline player%.rank} is "leader":
+                                send "&cFaction leaders cannot be demoted"
+                        else:
+                            send "&cYou don't have permission for that, you must be promoted first"
+                    else:
+                        send "&cYou must be in a faction to do that"
+                else:
+                    send "{@prefix} &fUsage: &4/f demote <player>&r"
+        else:
+            send "&cYou are lacking the permission node: &4factions.demote"
+
+#-#-#-#-#-#-#-#-#-#-#-#-#-#BANNING & KICKING PLAYERS#-#-#-#-#-#-#-#-#-#-#-#
+
+        if player has permission "factions.ban":
+            if arg 1 is "ban":
+                if arg 2 is set:
+                    if {factions::faction.%player's uuid%} is set:
+                        if {factions::%{factions::faction.%uuid of arg 2 parsed as offline player%}%.%arg 2%.banned} is not set:
+                            if {factions::%{factions::faction.%player's uuid%}%.%player's uuid%.rank} is "leader" or "co-leader":
+                                if {factions::%{factions::faction.%uuid of arg 2 parsed as offline player%}%.%uuid of arg 2 parsed as offline player%.rank} is "leader":
+                                    send "&cYou can't kick the leader"
+                                if {factions::%{factions::faction.%uuid of arg 2 parsed as offline player%}%.%uuid of arg 2 parsed as offline player%.rank} is "moderator" or "member" or "recruit":
+                                    set {factions::%{factions::faction.%uuid of arg 2 parsed as offline player%}%.%arg 2%.banned} to "Banned"
+                                    subtract 1 from {factions::%{factions::faction.%uuid of arg 2 parsed as offline player%}%.members}
+                                    delete {factions::owner.%uuid of arg 2 parsed as offline player%}
+                                    send "&aLeaving &2%{factions::faction.%uuid of arg 2 parsed as offline player%}%"
+                                    delete {factions::faction.%uuid of arg 2 parsed as offline player%}
+                                    send "&7You have been Banned from the Faction!" to arg 2 parsed as offline player
+                            else:
+                                send "&cYou must be a higher faction rank to do that"
+                        else:
+                            send "&c%arg 2% is already banned"
+                    else:
+                        send "&cYou must be in a faction to do that"
+                else:
+                    send "{@prefix} &fUsage: &4/f ban <player>&r"
+        else:
+            send "&cYou are lacking the permission node: &4factions.ban"
+
+        if player has permission "factions.unban":
+            if arg 1 is "unban":
+                if arg 2 is set:
+                    if {factions::faction.%player's uuid%} is set:
+                        if {factions::%{factions::faction.%player's uuid%}%.%player's uuid%.rank} is "leader" or "co-leader":
+                            if {factions::%{factions::faction.%uuid of arg 2 parsed as offline player%}%.%arg 2%.banned} is set:
+                                delete {factions::%{factions::faction.%uuid of arg 2 parsed as offline player%}%.%arg 2%.banned}
+                                set {factions.unbanning} to {factions::faction.%player's uuid%}
+                                send "&7You have been unbanned from %{factions.unbanning}%"
+                                wait 1 tick
+                                delete {factions.unbanning}
+                            else:
+                                send "That Player is not banned"
+                        else:
+                            send "&cYou must be a higher faction rank to do that"
+                    else:
+                        send "&cYou must be in a faction to do that"
+                else:
+                    send "{@prefix} &fUsage: &4/f unban <player>&r"
+        else:
+            send "&cYou are lacking the permission node: &4factions.unban"
+
+        if player has permission "factions.kick":
+            if arg 1 is "kick":
+                if arg 2 is set:
+                    if {factions::faction.%player's uuid%} is set:
+                        if {factions::%{factions::faction.%player's uuid%}%.%player's uuid%.rank} is "leader" or "co-leader" or "moderator":
+                            if {factions::%{factions::faction.%uuid of arg 2 parsed as offline player%}%.%uuid of arg 2 parsed as offline player%.rank} is "leader":
+                                send "&cYou can't kick the leader"
+                            if {factions::%{factions::faction.%uuid of arg 2 parsed as offline player%}%.%uuid of arg 2 parsed as offline player%.rank} is "co-leader":
+                                send "&cYou cannt kick Co-Leaders, you must demote them first"
+                            if {factions::%{factions::faction.%uuid of arg 2 parsed as offline player%}%.%uuid of arg 2 parsed as offline player%.rank} is "moderator" or "member" or "recruit":
+                                subtract 1 from {factions::%{factions::faction.%uuid of arg 2 parsed as offline player%}%.members}
+                                delete {factions::owner.%uuid of arg 2 parsed as offline player%}
+                                send "&aLeaving &2%{factions::faction.%uuid of arg 2 parsed as offline player%}%"
+                                delete {factions::faction.%uuid of arg 2 parsed as offline player%}
+                                send "&7You have been Kicked from the Faction!" to arg 2 parsed as offline player
+                        else:
+                            send "&cYou must be a higher faction rank to do that"
+                    else:
+                        send "&cYou must be in a faction to do that"
+                else:
+                    send "{@prefix} &fUsage: &4/f kick <player>&r"
+        else:
+            send "&cYou are lacking the permission node: &4factions.kick"
+
+#-#-#-#-#-#-#-#-#-#-#-#-#-#CLAIMING#-#-#-#-#-#-#-#-#-#-#-#
+
+        if player has permission "factions.claim":
+            if arg 1 is "claim":
+                if {factions::faction.%player's uuid%} is set:
+                    if {factions::faction.%{factions::%chunk at player%.claim}%} is not set:
+                        if {factions::%{factions::faction.%player's uuid%}%.%player's uuid%.rank} is "leader" or "co-leader" or "moderator" or "member":
+                            if {factions::%{factions::faction.%player's uuid%}%.maxclaims} is greater than 0:
+                                set {factions::%chunk at player%.claim} to {factions::faction.%player's uuid%}
+                                send "&aLand has been claimed to %{factions::faction.%player's uuid%}%"
+                                remove 1 from {factions::%{factions::faction.%player's uuid%}%.maxclaims}
+                                add 1 to {factions::%{factions::faction.%player's uuid%}%.claims}
+                            else:
+                                send "&cYou faction has max claims, you must unclaim land first"
+                        else:
+                            send "&cRecruits cannot claim land"
+                    else:
+                        send "&aThis land has already been claimed by %{factions::%chunk at player%.claim}%"
+                else:
+                    send "&cYou must be in a faction to do that"
+        else:
+            send "&cYou are lacking the permission node: &4factions.claim"
+
+        if player has permission "factions.unclaim":
+            if arg 1 is "unclaim":
+                if {factions::faction.%player's uuid%} is set:
+                    if {factions::%chunk at player%.claim} is "%{factions::faction.%player's uuid%}%":
+                        if {factions::%{factions::faction.%player's uuid%}%.%player's uuid%.rank} is "leader" or "co-leader" or "moderator":
+                            if {factions::%chunk at player%.claim} is "%{factions::faction.%player's uuid%}%":
+                                delete {factions::%chunk at player%.claim}
+                                send "&aLand has been unclaimed"
+                                remove 1 from {factions::%{factions::faction.%player's uuid%}%.claims}
+                                add 1 to {factions::%{factions::faction.%player's uuid%}%.maxclaims}
+                            else:
+                                send "&cYour faction doesn't own this claim"
+                        else:
+                            send "&cYou cannot do that! You must be promoted first"
+                    else:
+                        send "&aThis land isn't claimed"
+                else:
+                    send "&cYou must be in a faction to do that"
+        else:
+            send "&cYou are lacking the permission node: &4factions.unclaim"
+
+on break:
+    if {factions::%chunk of player%.claim} is "%{factions::faction.%player's uuid%}%":
+    else:
+        send "%{factions::%chunk at player%.claim}% has claimed this land"
+        cancel event
+on place:
+    if {factions::%chunk of player%.claim} is "%{factions::faction.%player's uuid%}%":
+    else:
+        send "%{factions::%chunk at player%.claim}% has claimed this land"
+        cancel event
+
+on damage:
+    if attacker is player:
+        if victim is player:
+            if {factions::%chunk of victim%.claim} is set:
+            cancel event
